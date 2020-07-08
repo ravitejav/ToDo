@@ -9,18 +9,23 @@
 import React, {Component} from 'react';
 import {StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert, AsyncStorage} from 'react-native';
 import {Button} from 'react-native-material-ui';
-import {Icon} from 'react-native-vector-icons/MaterialIcons'
+import Icon from 'react-native-vector-icons/FontAwesome';
 type Props = {};
 
 export default class TodoHomePage extends Component<Props> {
 
   constructor(props) {
     super(props);
-    this._retrieveData();
+    this.state = {
+      data: [],
+      dialog: false,
+      title: '',
+      desc: ''
+    };
   }
 
   toggleDialog = (toggle) => {
-    this.setState({dialog: toggle}, () => this._storeData());
+    this.setState({dialog: toggle});
   }
 
   updateValue = (name, value) => {
@@ -28,7 +33,6 @@ export default class TodoHomePage extends Component<Props> {
       ...this.state,
       [name]: value.nativeEvent.text,
     }
-    this._storeData();
   }
 
   addTodo = () => {
@@ -42,7 +46,7 @@ export default class TodoHomePage extends Component<Props> {
         },
       ],
       dialog: false,
-    }, () => this._storeData());
+    });
   }
 
   askForCompletion = index => {
@@ -65,47 +69,18 @@ export default class TodoHomePage extends Component<Props> {
     );
   }
 
-  _storeData = async () => {
-    try {
-      await AsyncStorage.setItem(
-        'localState',
-        this.state
-      );
-    } catch (error) {
-      // Error saving data
-    }
-  };
-
-  _retrieveData = async () => {
-    try {
-      this.state = {
-        data: [],
-        dialog: false,
-        title: "",
-        desc: ""
-      };
-      const value = await AsyncStorage.getItem('localState');
-      if (value !== null) {
-        this.state = value;
-      }
-    } catch (error) {
-      
-    }
-  };
-
   completeTask = index => {
     const data = this.state.data;
     if(data[index].status)
       data.splice(index, 1);
     else
       data[index].status = true;
-    this.setState({ data: [ ...data] },() =>  this._storeData());
+    this.setState({ data: [ ...data] });
   }
 
   render() {
     return (
         <View style={styles.mainPage}>
-          
           <View style={styles.header}>
             <Text style={styles.title}>Your Todo List</Text>
           </View>
@@ -135,7 +110,9 @@ export default class TodoHomePage extends Component<Props> {
               <Text style={styles.todoHeader}>Description</Text>
               <TextInput style={styles.textInput} onChange={text => this.updateValue("desc", text)}  />
               <Text>{'\n'}</Text>
-              <Button text="Add Todo to list" large raised={true} accent={true} onPress={() => this.addTodo()}></Button>
+              <Button text="Add Todo" large raised={true} primary={true} onPress={() => this.addTodo()}></Button>
+              <Text>{'\n'}</Text>
+              <Button text="Cancel" large raised={true} accent={true} onPress={() => this.setState({dialog: false})}></Button>
             </View>
           )}
         </View>  
@@ -150,37 +127,46 @@ const styles = StyleSheet.create({
     height: '100%',
     width: '100%', 
   },
-  header: {
-    flex: 0.08, 
-    height: 40,
-    width: '100%',
-    backgroundColor: '#909090',
+  header: { 
+    height: 80,
+    backgroundColor: '#ff6ec7',
+    marginVertical: 5,
+    marginHorizontal: 10,
+    borderRadius: 9,
+    fontWeight: "900",
   },
   title: {
     fontSize: 40,
     marginLeft: 4,
+    alignSelf: "center",
+    padding: 16,
   },
   todoList: {
-    flex: 0.92,
+    flex: 1,
     flexDirection:"column",
     marginLeft: 30,
     marginRight: 30,
     marginTop: 20
   },
   todo: {
-    height: 70,
+    height: 90,
     width: '100%',
-    borderRadius: 12,
+    borderTopLeftRadius: 6,
+    borderBottomLeftRadius: 6,
     borderWidth: 1,
+    borderColor: '#000000',
     borderRightWidth: 9,
     flexDirection:"column",
     marginBottom: 9,
+    borderBottomRightRadius: 5,
+    borderTopRightRadius: 5,
   },
   todoHeader: {
     paddingLeft: 5,
     height: 26,
-    fontSize: 20,
+    fontSize: 26,
     color: '#000000',
+    marginBottom: 4,
   },
   todoDesc: {
     paddingLeft: 5,
@@ -188,10 +174,10 @@ const styles = StyleSheet.create({
     color: '#232323',
   },
   nonCompleted :{
-    borderColor: 'red',
+    borderRightColor: 'red',
   },
   completed: {
-    borderColor: 'green',
+    borderRightColor: 'green',
   },
   textInput: {
     borderWidth: 1,
